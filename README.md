@@ -83,3 +83,71 @@ python app.py
 ```
 
 Visit `http://localhost:5000` in your browser.
+
+
+
+---
+
+## Supabase Setup
+
+Create a new Supabase project at [supabase.com](https://supabase.com), then set up the following tables.
+
+### Table: `templates`
+
+Stores the resume template definitions.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | int8 | Primary key, auto-increment |
+| `name` | text | e.g. "Modern Resume" |
+| `html_file` | text | e.g. "modern_resume.html" |
+| `category` | text | e.g. "Resume Template" |
+
+**Seed data** — insert these 3 rows manually via the Supabase Table Editor:
+
+| name | html_file | category |
+|---|---|---|
+| Modern Resume | modern_resume.html | Resume Template |
+| Professional Resume | professional_resume.html | Resume Template |
+| University Resume | university_resume.html | Resume Template |
+
+---
+
+### Table: `user_resume`
+
+Stores each user's saved resumes.
+
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| `id` | int8 | auto-increment | Primary key |
+| `user_email` | text | — | The logged-in user's email |
+| `template_id` | int4 | — | References `templates.id` |
+| `title` | text | — | Resume title set by user |
+| `content` | text | — | JSON string of resume data |
+| `is_favorite` | bool | `false` | Starred by user |
+| `created_at` | timestamptz | `now()` | Auto-set on insert |
+| `updated_at` | timestamptz | `now()` | Update manually on save |
+
+---
+
+### Row Level Security (RLS)
+
+Enable RLS on `user_resume` and add the following policies so the app can read, insert, update, and delete rows:
+
+```sql
+-- Allow all operations (the app uses the anon key server-side via Flask)
+CREATE POLICY "Allow insert" ON user_resume FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow select" ON user_resume FOR SELECT USING (true);
+CREATE POLICY "Allow update" ON user_resume FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow delete" ON user_resume FOR DELETE USING (true);
+```
+
+> Run these in the Supabase **SQL Editor** (Database → SQL Editor → New query).
+
+---
+
+### Authentication
+
+Enable **Email/Password** sign-in under **Authentication → Providers → Email**.
+
+The app uses Supabase Auth for signup and login — no additional configuration needed beyond enabling the provider.
